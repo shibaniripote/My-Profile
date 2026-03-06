@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PM Portfolio — Mission Control</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;600&family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #070b14;
+    --panel: #0c1220;
+    --border: #1a2740;
+    --accent: #00d4ff;
+    --accent2: #7b61ff;
+    --accent3: #00ffb2;
+    --warn: #ff6b35;
+    --text: #f0f4f8;
+    --muted: #7a90a8;
+    --card: #0f1928;
+    --glow: rgba(0,212,255,0.15);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--bg);
+    font-family: 'Inter', sans-serif;
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Starfield background */
+  body::before {
+    content:'';
+    position:fixed; inset:0;
+    background-image:
+      radial-gradient(1px 1px at 10% 20%, rgba(0,212,255,0.4) 0%, transparent 100%),
+      radial-gradient(1px 1px at 30% 60%, rgba(123,97,255,0.3) 0%, transparent 100%),
+      radial-gradient(1px 1px at 70% 15%, rgba(0,255,178,0.3) 0%, transparent 100%),
+      radial-gradient(1px 1px at 85% 75%, rgba(0,212,255,0.2) 0%, transparent 100%),
+      radial-gradient(1.5px 1.5px at 50% 85%, rgba(123,97,255,0.4) 0%, transparent 100%),
+      radial-gradient(1px 1px at 20% 90%, rgba(0,255,178,0.2) 0%, transparent 100%);
+    pointer-events:none; z-index:0;
+  }
+
+  /* Grid lines */
+  body::after {
+    content:'';
+    position:fixed; inset:0;
+    background-image:
+      linear-gradient(rgba(26,39,64,0.4) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(26,39,64,0.4) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events:none; z-index:0;
+  }
+
+  .wrapper { position:relative; z-index:1; max-width:1400px; margin:0 auto; padding:24px; }
+
+  /* ── HEADER ── */
+  .header {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:20px 28px;
+    border:1px solid var(--border);
+    background: linear-gradient(135deg, rgba(0,212,255,0.05), rgba(123,97,255,0.05));
+    border-radius:4px;
+    margin-bottom:20px;
+    position:relative; overflow:hidden;
+  }
+  .header::before {
+    content:'';
+    position:absolute; left:0; top:0; bottom:0; width:3px;
+    background: linear-gradient(180deg, var(--accent), var(--accent2));
+  }
+  .header-left h1 {
+    font-family:'Plus Jakarta Sans', sans-serif;
+    font-size:clamp(22px,3vw,34px);
+    font-weight:800;
+    letter-spacing:-0.5px;
+    background: linear-gradient(90deg, #ffffff, var(--accent));
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  }
+  .header-left p {
+    font-family:'Roboto Mono', monospace;
+    font-size:11px;
+    color: var(--accent);
+    letter-spacing:3px;
+    text-transform:uppercase;
+    margin-top:4px;
+  }
+  .header-right {
+    display:flex; flex-direction:column; align-items:flex-end; gap:6px;
+  }
+  .status-pill {
+    display:flex; align-items:center; gap:8px;
+    background: rgba(0,255,178,0.08);
+    border:1px solid rgba(0,255,178,0.25);
+    border-radius:20px;
+    padding:4px 12px;
+    font-family:'Roboto Mono', monospace;
+    font-size:10px; color: var(--accent3);
+    letter-spacing:1px;
+  }
+  .status-dot {
+    width:6px; height:6px; border-radius:50%;
+    background: var(--accent3);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%,100% { opacity:1; box-shadow:0 0 0 0 rgba(0,255,178,0.5); }
+    50% { opacity:0.7; box-shadow:0 0 0 5px rgba(0,255,178,0); }
+  }
+  .loc {
+    font-family:'Roboto Mono', monospace;
+    font-size:10px; color: var(--muted);
+    letter-spacing:1px;
+  }
+
+  /* ── GRID ── */
+  .grid-main {
+    display:grid;
+    grid-template-columns: 260px 1fr 260px;
+    grid-template-rows: auto auto auto;
+    gap:16px;
+  }
+
+  @media(max-width:1000px) {
+    .grid-main { grid-template-columns:1fr 1fr; }
+    .col-mid { grid-column:1/-1; }
+    .col-right { grid-column:1/-1; }
+  }
+  @media(max-width:640px) {
+    .grid-main { grid-template-columns:1fr; }
+  }
+
+  /* ── PANEL BASE ── */
+  .panel {
+    background: var(--card);
+    border:1px solid var(--border);
+    border-radius:4px;
+    padding:20px;
+    position:relative; overflow:hidden;
+  }
+  .panel::after {
+    content:'';
+    position:absolute; top:0; right:0;
+    width:60px; height:60px;
+    background: radial-gradient(circle at top right, rgba(0,212,255,0.06), transparent 70%);
+    pointer-events:none;
+  }
+  .panel-label {
+    font-family:'Roboto Mono', monospace;
+    font-size:9px; letter-spacing:3px;
+    text-transform:uppercase; color: var(--muted);
+    margin-bottom:16px;
+    display:flex; align-items:center; gap:8px;
+  }
+  .panel-label::before {
+    content:''; width:16px; height:1px;
+    background: var(--accent); display:inline-block;
+  }
+
+  /* ── KPI RINGS (left col) ── */
+  .kpi-grid { display:flex; flex-direction:column; gap:14px; }
+  .kpi-ring-card {
+    display:flex; align-items:center; gap:14px;
+    padding:12px;
+    background: rgba(255,255,255,0.02);
+    border:1px solid rgba(255,255,255,0.05);
+    border-radius:3px;
+    transition: border-color 0.3s;
+    cursor:default;
+  }
+  .kpi-ring-card:hover { border-color: rgba(0,212,255,0.3); }
+  .ring-wrap { position:relative; width:56px; height:56px; flex-shrink:0; }
+  .ring-wrap svg { transform:rotate(-90deg); }
+  .ring-bg { fill:none; stroke: rgba(255,255,255,0.06); stroke-width:5; }
+  .ring-fill {
+    fill:none; stroke-width:5; stroke-linecap:round;
+    transition: stroke-dashoffset 1.5s cubic-bezier(.4,0,.2,1);
+  }
+  .ring-label {
+    position:absolute; inset:0;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Roboto Mono', monospace;
+    font-size:11px; font-weight:700;
+  }
+  .kpi-info { flex:1; min-width:0; }
+  .kpi-title { font-size:12px; font-weight:500; color:var(--text); line-height:1.3; }
+  .kpi-val {
+    font-family:'Plus Jakarta Sans', sans-serif;
+    font-size:22px; font-weight:800;
+    line-height:1.1; margin-top:2px;
+  }
+  .kpi-sub { font-size:10px; color:var(--muted); margin-top:2px; }
+
+  /* ── CAREER ROADMAP (center) ── */
+  .roadmap { position:relative; }
+  .roadmap-track {
+    position:absolute; left:18px; top:10px; bottom:10px;
+    width:2px;
+    background: linear-gradient(180deg, var(--accent), var(--accent2), var(--accent3));
+    border-radius:2px;
+  }
+  .roadmap-item {
+    display:flex; align-items:flex-start; gap:16px;
+    padding:0 0 24px 48px;
+    position:relative;
+  }
+  .roadmap-dot {
+    position:absolute; left:10px; top:4px;
+    width:18px; height:18px; border-radius:50%;
+    border:2px solid var(--accent);
+    background: var(--bg);
+    display:flex; align-items:center; justify-content:center;
+    z-index:1;
+    transition: transform 0.3s, box-shadow 0.3s;
+    cursor:default;
+  }
+  .roadmap-dot:hover {
+    transform: scale(1.3);
+    box-shadow: 0 0 12px var(--accent);
+  }
+  .roadmap-dot-inner { width:6px; height:6px; border-radius:50%; }
+  .rm-content {
+    flex:1;
+    background: rgba(255,255,255,0.02);
+    border:1px solid rgba(255,255,255,0.06);
+    border-radius:3px; padding:14px 16px;
+    transition: border-color 0.3s, background 0.3s;
+    cursor:default;
+  }
+  .rm-content:hover {
+    border-color: rgba(0,212,255,0.2);
+    background: rgba(0,212,255,0.03);
+  }
+  .rm-header { display:flex; justify-content:space-between; align-items:flex-start; gap:8px; flex-wrap:wrap; }
+  .rm-role { font-family:'Plus Jakarta Sans', sans-serif; font-size:14px; font-weight:700; }
+  .rm-company { font-size:12px; color: var(--accent); margin-top:2px; font-weight:500; }
+  .rm-date {
+    font-family:'Roboto Mono', monospace;
+    font-size:9px; color: var(--muted); letter-spacing:1px;
+    white-space:nowrap; margin-top:2px;
+    text-align:right;
+  }
+  .rm-tags { display:flex; flex-wrap:wrap; gap:5px; margin-top:10px; }
+  .tag {
+    font-family:'Roboto Mono', monospace;
+    font-size:9px; letter-spacing:1px;
+    padding:3px 8px;
+    border-radius:2px;
+    text-transform:uppercase;
+  }
+  .tag-blue { background: rgba(0,212,255,0.1); color: var(--accent); border:1px solid rgba(0,212,255,0.2); }
+  .tag-purple { background: rgba(123,97,255,0.1); color: var(--accent2); border:1px solid rgba(123,97,255,0.2); }
+  .tag-green { background: rgba(0,255,178,0.1); color: var(--accent3); border:1px solid rgba(0,255,178,0.2); }
+  .tag-orange { background: rgba(255,107,53,0.1); color: var(--warn); border:1px solid rgba(255,107,53,0.2); }
+  .rm-wins { margin-top:10px; display:flex; flex-direction:column; gap:4px; }
+  .rm-win {
+    font-size:11px; color: var(--muted);
+    display:flex; align-items:baseline; gap:6px;
+    line-height:1.5;
+  }
+  .rm-win::before { content:'›'; color: var(--accent); flex-shrink:0; }
+
+  /* ── IMPACT COUNTERS ── */
+  .impact-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .impact-card {
+    padding:14px; text-align:center;
+    background: rgba(255,255,255,0.02);
+    border:1px solid rgba(255,255,255,0.06);
+    border-radius:3px;
+    position:relative; overflow:hidden;
+    transition: border-color 0.3s;
+    cursor:default;
+  }
+  .impact-card:hover { border-color: rgba(123,97,255,0.3); }
+  .impact-card::before {
+    content:'';
+    position:absolute; bottom:0; left:0; right:0; height:2px;
+  }
+  .impact-card.c1::before { background: var(--accent); }
+  .impact-card.c2::before { background: var(--accent2); }
+  .impact-card.c3::before { background: var(--accent3); }
+  .impact-card.c4::before { background: var(--warn); }
+  .impact-num {
+    font-family:'Plus Jakarta Sans', sans-serif;
+    font-size:28px; font-weight:800;
+    line-height:1;
+  }
+  .impact-unit { font-size:14px; font-weight:400; opacity:0.7; }
+  .impact-label { font-size:10px; color:var(--muted); margin-top:5px; line-height:1.4; }
+
+  /* ── SKILLS RADAR ── */
+  .skills-section { }
+  .skill-bar-row { margin-bottom:12px; }
+  .skill-bar-header {
+    display:flex; justify-content:space-between;
+    font-size:11px; margin-bottom:5px;
+  }
+  .skill-bar-name { color: var(--text); font-weight:500; }
+  .skill-bar-pct { font-family:'Roboto Mono', monospace; font-size:10px; }
+  .skill-bar-track {
+    height:4px;
+    background: rgba(255,255,255,0.06);
+    border-radius:2px; overflow:hidden;
+  }
+  .skill-bar-fill {
+    height:100%; border-radius:2px;
+    transition: width 1.5s cubic-bezier(.4,0,.2,1);
+    width:0%;
+  }
+
+  /* ── TOOLS GRID ── */
+  .tools-grid { display:grid; grid-template-columns: repeat(3,1fr); gap:8px; }
+  .tool-chip {
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:5px; padding:10px 6px;
+    background: rgba(255,255,255,0.02);
+    border:1px solid rgba(255,255,255,0.06);
+    border-radius:3px; cursor:default;
+    transition: all 0.3s;
+    text-align:center;
+  }
+  .tool-chip:hover {
+    background: rgba(0,212,255,0.06);
+    border-color: rgba(0,212,255,0.25);
+    transform: translateY(-2px);
+  }
+  .tool-icon { font-size:18px; }
+  .tool-name { font-family:'Roboto Mono', monospace; font-size:8px; letter-spacing:1px; color:var(--muted); text-transform:uppercase; }
+
+  /* ── EDUCATION ── */
+  .edu-item { margin-bottom:14px; padding-bottom:14px; border-bottom:1px solid var(--border); }
+  .edu-item:last-child { margin-bottom:0; padding-bottom:0; border-bottom:none; }
+  .edu-degree { font-family:'Plus Jakarta Sans', sans-serif; font-size:13px; font-weight:700; line-height:1.3; }
+  .edu-school { font-size:11px; color:var(--accent); margin-top:3px; }
+  .edu-meta { font-family:'Roboto Mono', monospace; font-size:9px; color:var(--muted); margin-top:3px; letter-spacing:1px; }
+
+  /* ── CERTIFICATIONS ── */
+  .cert-list { display:flex; flex-direction:column; gap:8px; }
+  .cert-item {
+    display:flex; align-items:center; gap:10px;
+    padding:9px 12px;
+    background: rgba(255,255,255,0.02);
+    border:1px solid rgba(255,255,255,0.05);
+    border-radius:3px;
+    font-size:11px; transition:border-color 0.3s; cursor:default;
+  }
+  .cert-item:hover { border-color:rgba(0,255,178,0.3); }
+  .cert-badge {
+    width:22px; height:22px; border-radius:50%;
+    background: linear-gradient(135deg, var(--accent2), var(--accent));
+    display:flex; align-items:center; justify-content:center;
+    font-size:10px; flex-shrink:0;
+  }
+
+  /* ── AI SPECIALTY STRIP ── */
+  .ai-strip {
+    grid-column: 1 / -1;
+    display:flex; gap:12px; flex-wrap:wrap;
+    padding:18px 24px;
+    background: linear-gradient(135deg, rgba(0,212,255,0.04), rgba(123,97,255,0.04));
+    border:1px solid rgba(123,97,255,0.2);
+    border-radius:4px;
+    align-items:center;
+  }
+  .ai-strip-label {
+    font-family:'Roboto Mono', monospace;
+    font-size:10px; color:var(--accent2); letter-spacing:3px;
+    text-transform:uppercase; flex-shrink:0;
+  }
+  .ai-tag {
+    font-family:'Roboto Mono', monospace;
+    font-size:9px; letter-spacing:1px;
+    padding:5px 10px; border-radius:2px;
+    background: rgba(123,97,255,0.1);
+    border:1px solid rgba(123,97,255,0.2);
+    color: var(--accent2); cursor:default;
+    transition: all 0.3s; text-transform:uppercase;
+  }
+  .ai-tag:hover {
+    background: rgba(123,97,255,0.2);
+    transform:scale(1.05);
+  }
+
+  /* ── ACHIEVEMENTS ── */
+  .ach-list { display:flex; flex-direction:column; gap:8px; }
+  .ach-item {
+    display:flex; align-items:center; gap:10px;
+    font-size:11px; padding:8px 12px;
+    background: linear-gradient(90deg, rgba(255,107,53,0.08), transparent);
+    border-left:2px solid var(--warn);
+    border-radius:0 3px 3px 0;
+  }
+  .ach-year { font-family:'Roboto Mono', monospace; font-size:9px; color:var(--warn); }
+
+  /* ── BOTTOM STATS ── */
+  .bottom-bar {
+    grid-column: 1 / -1;
+    display:grid; grid-template-columns: repeat(5, 1fr);
+    border:1px solid var(--border);
+    border-radius:4px; overflow:hidden;
+  }
+  .bstat {
+    padding:16px 20px; text-align:center;
+    border-right:1px solid var(--border);
+    position:relative;
+    transition: background 0.3s; cursor:default;
+  }
+  .bstat:last-child { border-right:none; }
+  .bstat:hover { background: rgba(0,212,255,0.04); }
+  .bstat-num {
+    font-family:'Plus Jakarta Sans', sans-serif;
+    font-size:26px; font-weight:800;
+  }
+  .bstat-lbl { font-size:10px; color:var(--muted); margin-top:3px; }
+
+  /* Animations */
+  @keyframes fadeInUp {
+    from { opacity:0; transform:translateY(16px); }
+    to { opacity:1; transform:translateY(0); }
+  }
+  .panel, .ai-strip, .bottom-bar, .header {
+    animation: fadeInUp 0.6s ease both;
+  }
+  .panel:nth-child(1) { animation-delay:.05s }
+  .panel:nth-child(2) { animation-delay:.1s }
+  .panel:nth-child(3) { animation-delay:.15s }
+  .panel:nth-child(4) { animation-delay:.2s }
+  .panel:nth-child(5) { animation-delay:.25s }
+  .panel:nth-child(6) { animation-delay:.3s }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width:6px; }
+  ::-webkit-scrollbar-track { background:var(--bg); }
+  ::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-left">
+      <h1>Program Manager — AI & Data</h1>
+      <p>// Portfolio · Mission Dashboard · 2025</p>
+    </div>
+    <div class="header-right">
+      <div class="status-pill"><span class="status-dot"></span>Open to Opportunities</div>
+      <div class="loc">📍 Munich, Germany · linkedin.com/in/yourprofile</div>
+    </div>
+  </div>
+
+  <!-- AI SPECIALTY STRIP -->
+  <div class="ai-strip">
+    <div class="ai-strip-label">AI Domains</div>
+    <div class="ai-tag">AI Program Strategy</div>
+    <div class="ai-tag">Fraud Detection & Risk AI</div>
+    <div class="ai-tag">ML-Enabled Systems</div>
+    <div class="ai-tag">AI Product Lifecycle</div>
+    <div class="ai-tag">Data-Driven Delivery</div>
+    <div class="ai-tag">Generative AI PM</div>
+    <div class="ai-tag">ERP & Data Governance</div>
+    <div class="ai-tag">Agile at Scale</div>
+  </div>
+
+  <!-- MAIN GRID -->
+  <div class="grid-main" style="margin-top:16px;">
+
+    <!-- LEFT COLUMN: KPI Rings -->
+    <div class="panel">
+      <div class="panel-label">Impact Metrics</div>
+      <div class="kpi-grid" id="kpis"></div>
+    </div>
+
+    <!-- CENTER: Career Roadmap -->
+    <div class="panel col-mid">
+      <div class="panel-label">Career Roadmap</div>
+      <div class="roadmap">
+        <div class="roadmap-track"></div>
+
+        <div class="roadmap-item">
+          <div class="roadmap-dot" title="Current">
+            <div class="roadmap-dot-inner" style="background:var(--accent3)"></div>
+          </div>
+          <div class="rm-content">
+            <div class="rm-header">
+              <div>
+                <div class="rm-role">Intern, Program Management</div>
+                <div class="rm-company">Beckman Coulter Diagnostics GmbH · Munich</div>
+              </div>
+              <div class="rm-date">SEPT 2023<br>SEPT 2024</div>
+            </div>
+            <div class="rm-tags">
+              <span class="tag tag-blue">Power BI</span>
+              <span class="tag tag-purple">Agile</span>
+              <span class="tag tag-green">ERP Migration</span>
+              <span class="tag tag-orange">AI Reporting</span>
+            </div>
+            <div class="rm-wins">
+              <div class="rm-win">Automated Power BI dashboards · reduced reporting effort by <strong style="color:var(--accent)">35%</strong></div>
+              <div class="rm-win">Facilitated Agile sprints · delivery efficiency +<strong style="color:var(--accent)">20%</strong></div>
+              <div class="rm-win">Led migration to centralized ERP · enabled data governance</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="roadmap-item">
+          <div class="roadmap-dot">
+            <div class="roadmap-dot-inner" style="background:var(--accent)"></div>
+          </div>
+          <div class="rm-content">
+            <div class="rm-header">
+              <div>
+                <div class="rm-role">Program Manager — Tech Expansion & Product Launch</div>
+                <div class="rm-company">Amazon (PRO) · Hyderabad</div>
+              </div>
+              <div class="rm-date">JAN 2019<br>NOV 2022</div>
+            </div>
+            <div class="rm-tags">
+              <span class="tag tag-blue">Fraud AI</span>
+              <span class="tag tag-purple">Tableau</span>
+              <span class="tag tag-green">Roadmap</span>
+              <span class="tag tag-orange">8 Enhancements</span>
+            </div>
+            <div class="rm-wins">
+              <div class="rm-win">Owned fraud detection roadmap · buyer transactional risk ↓<strong style="color:var(--accent)">12%</strong></div>
+              <div class="rm-win">Led 8 platform enhancements · system adoption +<strong style="color:var(--accent)">44%</strong></div>
+              <div class="rm-win">7 product launches end-to-end · customer metrics +<strong style="color:var(--accent)">37%</strong></div>
+              <div class="rm-win">Cross-functional team of <strong style="color:var(--accent)">25+</strong> stakeholders across engineering & ops</div>
+              <div class="rm-win">Post-launch rollout: Europe · Asia · US · adoption +<strong style="color:var(--accent)">72%</strong></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="roadmap-item" style="padding-bottom:0">
+          <div class="roadmap-dot">
+            <div class="roadmap-dot-inner" style="background:var(--accent2)"></div>
+          </div>
+          <div class="rm-content">
+            <div class="rm-header">
+              <div>
+                <div class="rm-role">Risk Investigator — Payment Risk Operations</div>
+                <div class="rm-company">Amazon (PRO) · Hyderabad</div>
+              </div>
+              <div class="rm-date">AUG 2017<br>JAN 2019</div>
+            </div>
+            <div class="rm-tags">
+              <span class="tag tag-blue">Risk Analytics</span>
+              <span class="tag tag-purple">SQL</span>
+              <span class="tag tag-green">Fraud Models</span>
+            </div>
+            <div class="rm-wins">
+              <div class="rm-win">Contributed to <strong style="color:var(--accent)">$3.8M</strong> dispute recoveries</div>
+              <div class="rm-win">Reduced investigation false positives by <strong style="color:var(--accent)">30%</strong></div>
+              <div class="rm-win">Tableau fraud dashboards · EU marketplace fraud ↓<strong style="color:var(--accent)">3.5% WoW</strong></div>
+              <div class="rm-win">Deployed 5 critical SOPs across multiple Amazon marketplaces</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN TOP: Impact Numbers -->
+    <div class="panel">
+      <div class="panel-label">Quantified Wins</div>
+      <div class="impact-grid">
+        <div class="impact-card c1">
+          <div class="impact-num" style="color:var(--accent)"><span class="counter" data-target="44">0</span><span class="impact-unit">%</span></div>
+          <div class="impact-label">Platform Adoption Lift</div>
+        </div>
+        <div class="impact-card c2">
+          <div class="impact-num" style="color:var(--accent2)"><span class="counter" data-target="3.8">0</span><span class="impact-unit">M</span></div>
+          <div class="impact-label">Dispute Recoveries</div>
+        </div>
+        <div class="impact-card c3">
+          <div class="impact-num" style="color:var(--accent3)"><span class="counter" data-target="72">0</span><span class="impact-unit">%</span></div>
+          <div class="impact-label">Global Rollout Adoption</div>
+        </div>
+        <div class="impact-card c4">
+          <div class="impact-num" style="color:var(--warn)"><span class="counter" data-target="37">0</span><span class="impact-unit">%</span></div>
+          <div class="impact-label">Customer Metrics Improved</div>
+        </div>
+        <div class="impact-card c1">
+          <div class="impact-num" style="color:var(--accent)"><span class="counter" data-target="30">0</span><span class="impact-unit">%</span></div>
+          <div class="impact-label">False Positive Reduction</div>
+        </div>
+        <div class="impact-card c3">
+          <div class="impact-num" style="color:var(--accent3)"><span class="counter" data-target="35">0</span><span class="impact-unit">%</span></div>
+          <div class="impact-label">Reporting Effort Saved</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LEFT COL 2: Skills -->
+    <div class="panel">
+      <div class="panel-label">Skill Proficiency</div>
+      <div class="skills-section" id="skills-bars"></div>
+    </div>
+
+    <!-- CENTER 2: Tools & Education -->
+    <div class="panel col-mid" style="display:grid; grid-template-columns:1fr 1fr; gap:24px;">
+      <!-- Tools -->
+      <div>
+        <div class="panel-label">Tech Stack</div>
+        <div class="tools-grid">
+          <div class="tool-chip"><div class="tool-icon">📊</div><div class="tool-name">Tableau</div></div>
+          <div class="tool-chip"><div class="tool-icon">📈</div><div class="tool-name">Power BI</div></div>
+          <div class="tool-chip"><div class="tool-icon">🐍</div><div class="tool-name">Python</div></div>
+          <div class="tool-chip"><div class="tool-icon">🗄️</div><div class="tool-name">SQL</div></div>
+          <div class="tool-chip"><div class="tool-icon">🔄</div><div class="tool-name">Jira</div></div>
+          <div class="tool-chip"><div class="tool-icon">⚡</div><div class="tool-name">Agile</div></div>
+          <div class="tool-chip"><div class="tool-icon">🗺️</div><div class="tool-name">Miro</div></div>
+          <div class="tool-chip"><div class="tool-icon">📋</div><div class="tool-name">Smartsheet</div></div>
+          <div class="tool-chip"><div class="tool-icon">🤖</div><div class="tool-name">Gen AI</div></div>
+        </div>
+      </div>
+      <!-- Education -->
+      <div>
+        <div class="panel-label">Education</div>
+        <div class="edu-item">
+          <div class="edu-degree">MSc Business Analytics &amp; Data Science</div>
+          <div class="edu-school">EU Business School, Munich</div>
+          <div class="edu-meta">NOV 2025 · Germany</div>
+        </div>
+        <div class="edu-item">
+          <div class="edu-degree">Bachelor of Commerce</div>
+          <div class="edu-school">Mumbai University</div>
+          <div class="edu-meta">JUN 2015 · India</div>
+        </div>
+        <div class="panel-label" style="margin-top:20px">Certifications</div>
+        <div class="cert-list">
+          <div class="cert-item"><div class="cert-badge">🏅</div>Product Management</div>
+          <div class="cert-item"><div class="cert-badge">⚡</div>Agile PM · Microsoft Project</div>
+          <div class="cert-item"><div class="cert-badge">🤖</div>Generative AI for PMs</div>
+          <div class="cert-item"><div class="cert-badge">👥</div>Managing Stakeholders</div>
+          <div class="cert-item"><div class="cert-badge">🔒</div>GDPR Compliance</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT COL 2: Achievements -->
+    <div class="panel">
+      <div class="panel-label">Recognition</div>
+      <div class="ach-list">
+        <div class="ach-item"><div><div class="ach-year">2022</div><div style="font-size:12px;margin-top:3px;">🏆 Employee of the Month</div><div style="font-size:10px;color:var(--muted);margin-top:2px;">Feb · Mar · Apr · Jun 2022</div></div></div>
+        <div class="ach-item"><div><div class="ach-year">2020</div><div style="font-size:12px;margin-top:3px;">💡 Innovation Kickstarted Award</div><div style="font-size:10px;color:var(--muted);margin-top:2px;">Award of the Year · Amazon</div></div></div>
+      </div>
+      <div class="panel-label" style="margin-top:20px">Experience Breadth</div>
+      <div style="display:flex; flex-direction:column; gap:6px;">
+        <div style="display:flex;justify-content:space-between;font-size:11px;"><span>Total Experience</span><span style="font-family:'Roboto Mono',monospace;color:var(--accent)">7+ yrs</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:11px;"><span>Countries Operated</span><span style="font-family:'Roboto Mono',monospace;color:var(--accent2)">5+</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:11px;"><span>Stakeholders Managed</span><span style="font-family:'Roboto Mono',monospace;color:var(--accent3)">25+</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:11px;"><span>Major Launches</span><span style="font-family:'Roboto Mono',monospace;color:var(--warn)">15+</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:11px;"><span>SOPs Deployed</span><span style="font-family:'Roboto Mono',monospace;color:var(--accent)">5</span></div>
+      </div>
+    </div>
+
+    <!-- BOTTOM BAR -->
+    <div class="bottom-bar">
+      <div class="bstat"><div class="bstat-num" style="color:var(--accent)">5+</div><div class="bstat-lbl">Years in PM</div></div>
+      <div class="bstat"><div class="bstat-num" style="color:var(--accent2)">15+</div><div class="bstat-lbl">Major Launches</div></div>
+      <div class="bstat"><div class="bstat-num" style="color:var(--accent3)">$3.8M</div><div class="bstat-lbl">Dispute Recoveries</div></div>
+      <div class="bstat"><div class="bstat-num" style="color:var(--warn)">72%</div><div class="bstat-lbl">Peak Adoption Lift</div></div>
+      <div class="bstat"><div class="bstat-num" style="color:var(--accent)">3</div><div class="bstat-lbl">Countries Worked In</div></div>
+    </div>
+
+  </div><!-- end grid -->
+</div><!-- end wrapper -->
+
+<script>
+// ── KPI RING DATA ──
+const kpis = [
+  { label:'Delivery Efficiency', val:'20%', pct:20, max:50, color:'#00d4ff' },
+  { label:'Fraud Risk Reduction', val:'12%', pct:12, max:25, color:'#7b61ff' },
+  { label:'Platform Adoption', val:'44%', pct:44, max:75, color:'#00ffb2' },
+  { label:'Reporting Saved', val:'35%', pct:35, max:50, color:'#ff6b35' },
+  { label:'False Positive Cut', val:'30%', pct:30, max:50, color:'#00d4ff' },
+];
+
+const R = 22;
+const CIRC = 2 * Math.PI * R;
+
+const kpiContainer = document.getElementById('kpis');
+kpis.forEach(k => {
+  const norm = k.pct / k.max;
+  const dashOffset = CIRC * (1 - norm);
+  const el = document.createElement('div');
+  el.className = 'kpi-ring-card';
+  el.innerHTML = `
+    <div class="ring-wrap">
+      <svg width="56" height="56" viewBox="0 0 56 56">
+        <circle class="ring-bg" cx="28" cy="28" r="${R}"/>
+        <circle class="ring-fill" cx="28" cy="28" r="${R}"
+          stroke="${k.color}"
+          stroke-dasharray="${CIRC}"
+          stroke-dashoffset="${CIRC}"
+          data-target="${dashOffset}"
+          id="ring-${k.label.replace(/\s/g,'')}"/>
+      </svg>
+      <div class="ring-label" style="color:${k.color}">${k.val}</div>
+    </div>
+    <div class="kpi-info">
+      <div class="kpi-val" style="color:${k.color}">${k.val}</div>
+      <div class="kpi-title">${k.label}</div>
+    </div>`;
+  kpiContainer.appendChild(el);
+});
+
+// ── SKILLS BARS ──
+const skills = [
+  { name:'Program Management', pct:95, color:'#00d4ff' },
+  { name:'Agile / Scrum', pct:92, color:'#7b61ff' },
+  { name:'Data Analytics', pct:88, color:'#00ffb2' },
+  { name:'Tableau / Power BI', pct:90, color:'#ff6b35' },
+  { name:'SQL', pct:82, color:'#00d4ff' },
+  { name:'Python', pct:75, color:'#7b61ff' },
+  { name:'AI/ML Product Mgmt', pct:85, color:'#00ffb2' },
+  { name:'Stakeholder Mgmt', pct:94, color:'#ff6b35' },
+];
+const skillsContainer = document.getElementById('skills-bars');
+skills.forEach(s => {
+  const row = document.createElement('div');
+  row.className = 'skill-bar-row';
+  row.innerHTML = `
+    <div class="skill-bar-header">
+      <span class="skill-bar-name">${s.name}</span>
+      <span class="skill-bar-pct" style="color:${s.color}">${s.pct}%</span>
+    </div>
+    <div class="skill-bar-track">
+      <div class="skill-bar-fill" style="background:${s.color}" data-width="${s.pct}%"></div>
+    </div>`;
+  skillsContainer.appendChild(row);
+});
+
+// ── COUNTER ANIMATION ──
+function animateCounters() {
+  document.querySelectorAll('.counter').forEach(el => {
+    const target = parseFloat(el.dataset.target);
+    const isFloat = String(target).includes('.');
+    let start = 0;
+    const dur = 1800;
+    const startTime = performance.now();
+    function step(now) {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / dur, 1);
+      const ease = 1 - Math.pow(1 - progress, 3);
+      const val = start + (target - start) * ease;
+      el.textContent = isFloat ? val.toFixed(1) : Math.round(val);
+      if (progress < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  });
+}
+
+// ── INTERSECTION OBSERVER ──
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      // Animate rings
+      document.querySelectorAll('.ring-fill').forEach(ring => {
+        const target = parseFloat(ring.getAttribute('data-target'));
+        ring.style.strokeDashoffset = target;
+      });
+      // Animate skill bars
+      document.querySelectorAll('.skill-bar-fill').forEach(bar => {
+        bar.style.width = bar.dataset.width;
+      });
+      // Animate counters
+      animateCounters();
+      observer.disconnect();
+    }
+  });
+}, { threshold: 0.1 });
+
+observer.observe(document.querySelector('.wrapper'));
+</script>
+</body>
+</html>
